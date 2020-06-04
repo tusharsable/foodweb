@@ -1,4 +1,10 @@
 import requests
+import pandas as pd
+
+def excelfinal(data):
+    data=pd.DataFrame(data.json())
+    print(data)
+    return 'excel'
 
 def dateMatch(date1):
     print(date1[0])
@@ -46,10 +52,16 @@ if resp.status_code != 200:
 
 import flask
 app = flask.Flask(__name__)
-app.config["DEBUG"] = True
+
+@app.route('/')
+def home():
+
+    result = '<h1>please enter date in url</h1>'
+
+    return result
 
 @app.route('/<date>', methods=['GET'])
-def home(date):
+def qdate(date):
 
     result = ''
     date1 = date.split('-')
@@ -57,6 +69,13 @@ def home(date):
         result = dateMatch(date1)
 
 
+@app.route('/excel', methods=['GET'])
+def excelreturn():
+
+    result = excelfinal(resp)
+
+   
     return result
-app.run()
+if __name__ == '__main__':
+    app.run()
 
