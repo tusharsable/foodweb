@@ -1,12 +1,35 @@
 import requests
 import pandas as pd
+from datetime import datetime as dt
+import xlsxwriter
+from flask import Flask, send_file
+from io import BytesIO
 
 def excelfinal(data):
-    data=pd.DataFrame(data.json())
-    print(data)
-    return 'excel'
+    df=pd.DataFrame(data.json())
+    date=[]
+    for dtstamp in df['DateTime']:
+        date.append((dt.strptime(dtstamp,"%Y-%m-%dT%H:%M:%SZ")).date())
 
-def dateMatch(date1):
+    output = BytesIO()
+    endExcel= pd.ExcelWriter(output, engine='xlsxwriter')
+    
+    df['Date'] = date
+    Unique_date=(df['Date'].unique())
+    for x in Unique_date:
+        newDf = df[df['Date']==x]
+        newDf=newDf.drop(['Date'],axis=1)
+        newDf.to_excel(endExcel, sheet_name=str(x), index=False)
+       
+
+    endExcel.close()
+    output.seek(0)
+    return output
+
+
+
+
+def datefilter(date1):
     print(date1[0])
     day=date1[0]
     month=date1[1]
@@ -66,16 +89,16 @@ def qdate(date):
     result = ''
     date1 = date.split('-')
     if len(date1) == 3:
-        result = dateMatch(date1)
-
+        result = datefilter(date1)
+    return result
 
 @app.route('/excel', methods=['GET'])
 def excelreturn():
 
-    result = excelfinal(resp)
-
+    output = excelfinal(resp)
+    print(type(output))
    
-    return result
+    return send_file(output,attachment_filename='result.xlsx',as_attachment=True)
 if __name__ == '__main__':
     app.run()
 
